@@ -12,7 +12,7 @@ static Paquet paquet;
 static JButton btn1 = new JButton(); 
 static JButton btn2 = new JButton();
 static JButton btn3 = new JButton();
-static JButton btnPaq = new JButton(new ImageIcon("Ronda\\dos.png")); 
+static JButton btnPaq = new JButton(new ImageIcon("src\\Ronda\\dos.png")); 
 
 static JButton btnQuitter = new JButton("Quitter"); 
 static JButton btnSimple = new JButton("Simple");
@@ -71,7 +71,7 @@ public JeuRonda(Paquet ptable, Paquet pjoeur, Paquet pordi) {
     joeur=pjoeur;
     ordi=pordi;
     //ArrayList<ImageIcon> imageTable = chargerListeImage(table.getPaquet(),"Ronda");
-    ArrayList<ImageIcon> imageJoeur = chargerListeImage(joeur.getPaquet(),"Ronda");
+    ArrayList<ImageIcon> imageJoeur = chargerListeImage(joeur.getPaquet(),"src\\Ronda");
     //ArrayList<ImageIcon> imageOrdi = chargerListeImage(ordi.getPaquet(),"Ronda");
     setPreferredSize(new Dimension(1500, 800));
     int w=1500;//getWidth();
@@ -101,7 +101,6 @@ public void lancer(){
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setLayout(null);
     pack();
-    
     setVisible(true);
 
 }
@@ -240,7 +239,7 @@ public static JPanel construirePane(Paquet table, Paquet joeur, Paquet ordi) {
     for (int i=0;i<imageOrdi.size();i++){
         JLabel label = new JLabel();
         //label.setIcon(imageOrdi.get(i));
-       label.setIcon(new ImageIcon("Ronda\\dos.png"));
+       label.setIcon(new ImageIcon("src\\Ronda\\dos.png"));
         //label.setIcon(new ImageIcon("Ronda\\baton1.png"));
        
         paneImageOrdi.add(label);
