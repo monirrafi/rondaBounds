@@ -1,9 +1,13 @@
 import java.awt.*;
 import java.util.*;
+
+
 import javax.swing.*;
+import javax.swing.Timer;
+
 import java.awt.event.*;
 
-public class Ronda extends JFrame implements actionImage{
+public class Ronda extends JFrame implements actionImage,Runnable{
 /*======================================== Declaration =============================================== */    
 static Paquet table;
 static Paquet joeur;
@@ -39,6 +43,7 @@ static Paquet suiteJoeur = new Paquet();
 static Paquet suiteOrdi = new Paquet();
 final static int W = 1500;
 final static int H = 800;
+static Thread th;
 
 
 
@@ -172,17 +177,197 @@ public static void distribuer(Paquet paquet,Paquet table,Paquet joeur,Paquet ord
         }
     
 
-}    
-public void actionBtn(ActionEvent e){
-    setVisible(false);
+}
+public static void tour(Carte carte,Paquet table,Paquet joeur) {
+    //Paquet suite = sequence(carte,table);
+    suiteJoeur = sequence(carte,table);
+    
+    
+    // si il ya une suite des cartes dans la table 
+    if(suiteJoeur.getPaquet().size() != 0){
+        table.getPaquet().remove(carte);
+        for(Carte cart:suiteJoeur.getPaquet()){
+            table.getPaquet().remove(cart);
+        }
+    
+        // cas de missa
+        if(table.getPaquet().size() ==0){
+            joeur.ajoutPoints(1);
+        }
+        // cas de essti
+        if(suiteJoeur.getPaquet().get(0).getLabel() == 'o'){
+            joeur.ajoutPoints(1);
+        }
+        for(Carte cart:suiteJoeur.getPaquet()){
+            joeur.getGainCartes().add(cart);
+        }
+        //joeur.getGainCartes().add(carte);
+        gagnatDernierTour = 'j';
+        for(Carte cart:table.getPaquet()){
+            cart.setLabel(' ');
+        }     
+    
+    }else{
+        table.getPaquet().add(carte);
+    }
+    joeur.getPaquet().remove(carte);
+    
+    }
+    public static int[] indexMeilleurCarte() {
+        int totalPoint=0,totalCarte=0,plusPoints=0,plusCarte=2;
+        //int ind =-1;
+        int[] retourneIndex = new int[3];
+        retourneIndex[0]= -1;
+        retourneIndex[1]=totalPoint;
+        retourneIndex[2]=totalCarte;
+        Paquet gainTable;
+        for(int i =0;i<ordi.getPaquet().size();i++){
+            gainTable = sequence(ordi.getPaquet().get(i), table);
+            if(gainTable.getPaquet().size() != 0){
+                totalCarte = gainTable.getPaquet().size();
+                // cas de missa
+                if(table.getPaquet().size() ==0){
+                    totalPoint++;
+                }
+                // cas de essti
+                if(gainTable.getPaquet().get(0).getLabel() == 'j'){
+                    totalPoint++;
+                }
+                if(totalPoint>=plusPoints && totalCarte >=plusCarte){
+                    plusPoints=totalPoint;
+                    plusCarte = totalCarte;
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+                    
+                }else if(totalPoint == 1 &&  totalCarte>=plusCarte ){
+                    plusCarte = totalCarte;
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+    
+                }else if(totalPoint>= plusPoints ){
+                    plusPoints = totalPoint;
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+    
+                }else if(totalCarte>=5 ){
+                    plusCarte = totalCarte;
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+    
+                }else if(totalPoint == 1 && totalCarte ==2){
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+    
+                }else if(totalCarte>= plusCarte ){
+                    plusCarte = totalCarte;
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+    
+                }else{
+                    retourneIndex[0]=i;
+                    retourneIndex[1]=totalPoint;
+                    retourneIndex[2]=totalCarte;
+                }
+            }  
+        }
+        return retourneIndex;
+    }
+    
+    public static void tourOrdi(Paquet ordi,Paquet table) {
+        int[] listeMeileur = indexMeilleurCarte();
+        if(listeMeileur[0] != -1){
+            Carte carte = ordi.getPaquet().get(listeMeileur[0]);
+            suiteOrdi = sequence(carte, table);
+            table.getPaquet().remove(carte);
+            for(Carte cart:suiteOrdi.getPaquet()){
+                table.getPaquet().remove(cart);
+            }
+                
+    
+            ordi.ajoutPoints(listeMeileur[1]);
+            for(Carte cart:suiteOrdi.getPaquet()){
+                ordi.getGainCartes().add(cart);
+            }
+            ordi.getPaquet().remove(listeMeileur[0]);
+    
+            gagnatDernierTour = 'o';
+            for(Carte cart:table.getPaquet()){
+                cart.setLabel(' ');
+            }     
+    
+        }else{
+            table.getPaquet().add(ordi.getPaquet().get(0));
+            ordi.getPaquet().remove(ordi.getPaquet().get(0));
+    
+        }
+    }
+    public static Paquet sequence(Carte card,Paquet table) {
+
+        ArrayList<Carte> listSequenece = new ArrayList<Carte>();
+        // verifier l'existance de la carte dans la table 
+        // retourne son index
+        int existe = table.trouveIndexRank(card);
+        if(existe != -1){
+        // sortir la carte semblable de la table
+            Carte current = table.getPaquet().get(existe);
+            //ordonner la table
+            Collections.sort(table.getPaquet());    
+            int indCurrent= table.getPaquet().indexOf(current);
+            //table.getPaquet().get(indCurrent).setLabel(label);
+            listSequenece.add(table.getPaquet().get(indCurrent));
+            int suivant=0;
+            for( int i=indCurrent+1;i<table.getPaquet().size();i++){
+                    if(current.getRank()==7){
+                        suivant = current.getRank()+3;
+    
+                    }else {
+                        suivant = current.getRank()+1;
+    
+                    }
+                    if(suivant==table.getPaquet().get(i).getRank()){
+                        listSequenece.add(table.getPaquet().get(i));
+                        current = table.getPaquet().get(i);
+                    
+                    }else{
+                        break;
+                    }
+            }
+            listSequenece.add(card);
+    /*        
+            table.getPaquet().remove(indCurrent);
+            for(Carte cart:listSequenece){
+                table.getPaquet().remove(cart);
+            }*/
+        }
+        Paquet paq = new Paquet(listSequenece);
+            return paq;     
+    }
+public void actionBtn(ActionEvent e) {
+    Carte carte = new Carte();
+    //setVisible(false);
     if(e.getSource() == btnPaq)
     {
         distribuer(paquet, table, joeur, ordi);
     }else if(e.getSource() == btnQuitter)
     {
         System.exit(0);
-    }
-    setVisible(true);
+    }else if(e.getSource() == btn1)
+    {
+        carte = joeur.getPaquet().get(0);
+        btn1.setBounds(50,H/3,125,150);
+        tour(carte, table, joeur);
+        th.start();
+        btn1.setVisible(false);
+    } 
+    tourOrdi(ordi, table);
+    //setVisible(true);
+    repaint();
 
 }
 
@@ -204,6 +389,16 @@ public static void main(String[] args) {
     //ronda = new JeuRonda("Jeu Ronda","Choisissez votre jeu ", "cliquer simple ou complet","");
     ronda = new Ronda(joeur,ordi,table);
     ronda.clique();
+}
+@Override
+public void run() {
+    
+    try {
+        th.sleep(2);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    
 }
 
 
